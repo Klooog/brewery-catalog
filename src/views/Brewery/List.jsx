@@ -1,10 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-
+import Pagination from "../../components/Pagination";
 export default function BreweryList() {
-  // State
+  // Data Loading State
   const [initialBreweries, setInitialBreweries] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginatedResults, setPaginatedResults] = useState([]);
+  const [resultsPerPage] = useState(10);
   // Refs
   const searchRef = useRef();
 
@@ -14,7 +19,7 @@ export default function BreweryList() {
     const res = await fetch(url);
 
     const breweryList = await res.json();
-    console.log(url);
+
     setInitialBreweries(breweryList);
 
     setLoading(false);
@@ -22,8 +27,18 @@ export default function BreweryList() {
 
   // Initial api call
   useEffect(() => {
-    fetchBreweryList("https://api.openbrewerydb.org/breweries?per_page=10");
+    fetchBreweryList("https://api.openbrewerydb.org/breweries");
   }, []);
+
+  // Calculate pagination and seperate current page data from overall initial data
+  useEffect(() => {
+    const lastBreweryIndex = currentPage * resultsPerPage;
+    const firstBreweryIndex = lastBreweryIndex - resultsPerPage;
+
+    setPaginatedResults(
+      initialBreweries.slice(firstBreweryIndex, lastBreweryIndex)
+    );
+  }, [initialBreweries, currentPage]);
 
   // Search Query GET ten results
   const handleSearch = (e) => {
@@ -42,6 +57,10 @@ export default function BreweryList() {
     // Return Recent Data
     fetchBreweryList("https://api.openbrewerydb.org/breweries?per_page=10");
   };
+
+  // Pagination
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
   return (
     <main>
       <h1>Brewery Catalog</h1>
@@ -58,14 +77,19 @@ export default function BreweryList() {
       <ul>
         {loading
           ? "Loading..."
-          : initialBreweries.length === 0
+          : paginatedResults.length === 0
           ? "No Results Available"
-          : initialBreweries.map((brewery) => (
+          : paginatedResults.map((brewery) => (
               <li key={brewery.id}>
                 <Link to={`/breweries/${brewery.id}`}>{brewery.name}</Link>-{" "}
                 {brewery.city}, {brewery.state}
               </li>
             ))}
+        <Pagination
+          resultsPerPage={resultsPerPage}
+          totalResults={initialBreweries.length}
+          paginate={paginate}
+        />
       </ul>
     </main>
   );
