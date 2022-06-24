@@ -18,8 +18,9 @@ export default function BreweryList() {
     setLoading(true);
     const res = await fetch(url);
 
-    const breweryList = await res.json();
-
+    let breweryList = await res.json();
+    // Sort initial data asc by name
+    breweryList = [...breweryList].sort((a, b) => (a.name > b.name ? 1 : -1));
     setInitialBreweries(breweryList);
 
     setLoading(false);
@@ -39,7 +40,12 @@ export default function BreweryList() {
       initialBreweries.slice(firstBreweryIndex, lastBreweryIndex)
     );
   }, [initialBreweries, currentPage]);
+  // Sort
+  const sortResults = () => {
+    setInitialBreweries([...initialBreweries].reverse());
 
+    setCurrentPage(1);
+  };
   // Search Query GET ten results
   const handleSearch = (e) => {
     e.preventDefault();
@@ -74,6 +80,12 @@ export default function BreweryList() {
         <button type="submit">Search</button>
         <button onClick={(e) => clearSearch(e)}>Reset</button>
       </form>
+
+      <div>
+        <button onClick={sortResults}>
+          <span>sort</span>
+        </button>
+      </div>
       <ul>
         {loading
           ? "Loading..."
